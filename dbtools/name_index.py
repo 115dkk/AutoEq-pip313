@@ -2,7 +2,8 @@
 
 import numpy as np
 import pandas as pd
-from rapidfuzz import fuzz
+from rapidfuzz.fuzz import ratio as fuzz_ratio
+from rapidfuzz.fuzz import token_set_ratio
 
 
 class NameItem:
@@ -217,39 +218,45 @@ class NameIndex:
             return results.items[0]
 
     def search_by_source_name(self, source_name, threshold=80):
-        """Finds all items which match closely to all given query parameters.
+        """Searches name index by source name with fuzzy matching.
 
         Args:
-            source_name: Name to search by. Ignored if None.
-            threshold: Threshold for matching with RapidFuzz.
+            source_name: Source name to search for
+            threshold: Match threshold in 0 to 100 range with 100 being perfect match
 
         Returns:
-            List of matching triplets with NameItem, RapidFuzz ratio and RapidFuzz token_set_ratio
+            NameIndex object with matched items
         """
         matches = []
         for item in self.items:
             # Search with false name
-            ratio = fuzz.ratio(item.source_name.lower(), source_name.lower())
-            token_set_ratio = fuzz.token_set_ratio(item.source_name.lower(), source_name.lower())
-            if ratio > threshold or token_set_ratio > threshold:
-                matches.append((item, ratio, token_set_ratio))
-        return sorted(matches, key=lambda x: x[1], reverse=True)
+            similarity_ratio = fuzz_ratio(item.source_name.lower(), source_name.lower())
+            similarity_token_set_ratio = token_set_ratio(item.source_name.lower(), source_name.lower())
+            if similarity_ratio > threshold or similarity_token_set_ratio > threshold:
+                matches.append((item, similarity_ratio, similarity_token_set_ratio))
+
+        # Sort by sum of both ratios
+        matches = sorted(matches, key=lambda x: x[1] + x[2], reverse=True)
+        return NameIndex([match[0] for match in matches])
 
     def search_by_name(self, name, threshold=80):
-        """Finds all items which match closely to all given query parameters.
+        """Searches name index by normalized name with fuzzy matching.
 
         Args:
-            name: Name to search by. Ignored if None.
-            threshold: Threshold for matching with RapidFuzz.
+            name: Normalized name to search for
+            threshold: Match threshold in 0 to 100 range with 100 being perfect match
 
         Returns:
-            List of matching triplets with NameItem, RapidFuzz ratio and RapidFuzz token_set_ratio
+            NameIndex object with matched items
         """
         matches = []
         for item in self.items:
             # Search with false name
-            ratio = fuzz.ratio(item.name.lower(), name.lower())
-            token_set_ratio = fuzz.token_set_ratio(item.name.lower(), name.lower())
-            if ratio > threshold or token_set_ratio > threshold:
-                matches.append((item, ratio, token_set_ratio))
-        return sorted(matches, key=lambda x: x[1], reverse=True)
+            similarity_ratio = fuzz_ratio(item.name.lower(), name.lower())
+            similarity_token_set_ratio = token_set_ratio(item.name.lower(), name.lower())
+            if similarity_ratio > threshold or similarity_token_set_ratio > threshold:
+                matches.append((item, similarity_ratio, similarity_token_set_ratio))
+
+        # Sort by sum of both ratios
+        matches = sorted(matches, key=lambda x: x[1] + x[2], reverse=True)
+        return NameIndex([match[0] for match in matches])

@@ -30,11 +30,11 @@ class ImageGraphParser:
 
         for file_path in file_paths:
             try:
-                with open(file_path, 'rb') as f:
-                    model = os.path.split(file_path)[-1].split('.')[0]
-                    self.images[model] = Image.open(file_path)
-            except:
-                warnings.warn('Failed to read image in path "{}"'.format(file_path))
+                model = os.path.split(file_path)[-1].split('.')[0]
+                with Image.open(file_path) as img:
+                    self.images[model] = img.copy()
+            except Exception as e:
+                warnings.warn(f'Failed to read image in path "{file_path}": {str(e)}')
 
     def parse_images(self, source, models=None, inspection_dir=None):
         """Parses all read images."""

@@ -4,12 +4,13 @@ import os
 from copy import deepcopy
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+from matplotlib.ticker import FormatStrFormatter
 import math
 from pathlib import Path
 from scipy.interpolate import InterpolatedUnivariateSpline
 from scipy.signal import savgol_filter, find_peaks, minimum_phase, firwin2
 from scipy.stats import linregress
-from scipy.fftpack import next_fast_len
+from scipy.fft import next_fast_len
 import numpy as np
 import urllib
 from time import time
@@ -836,24 +837,63 @@ class FrequencyResponse:
         if not len(self.frequency):
             raise ValueError('\'frequency\' has no data!')
         fig, ax = self.__class__.init_plot(fig=fig, ax=ax)
+        
+        # 최신 matplotlib 버전에서는 딕셔너리 언패킹 방식이 변경되었습니다
+        # 각 플롯 매개변수를 별도로 처리합니다
         if target and len(self.target):
-            ax.plot(self.frequency, self.target, **{'label': 'Target', 'linewidth': 6, 'color': '#7bc8f6', **(target_plot_kwargs if target_plot_kwargs else {})})
+            kwargs = {'label': 'Target', 'linewidth': 6, 'color': '#7bc8f6'}
+            if target_plot_kwargs:
+                kwargs.update(target_plot_kwargs)
+            ax.plot(self.frequency, self.target, **kwargs)
+            
         if smoothed and len(self.smoothed):
-            ax.plot(self.frequency, self.smoothed, **{'label': 'Raw Smoothed', 'linewidth': 6, 'color': '#dbd3cd', **(smoothed_plot_kwargs if smoothed_plot_kwargs else {})})
+            kwargs = {'label': 'Raw Smoothed', 'linewidth': 6, 'color': '#dbd3cd'}
+            if smoothed_plot_kwargs:
+                kwargs.update(smoothed_plot_kwargs)
+            ax.plot(self.frequency, self.smoothed, **kwargs)
+            
         if error_smoothed and len(self.error_smoothed):
-            ax.plot(self.frequency, self.error_smoothed, **{'label': 'Error Smoothed', 'linewidth': 6, 'color': '#ffcfc7', **(error_smoothed_plot_kwargs if error_smoothed_plot_kwargs else {})})
+            kwargs = {'label': 'Error Smoothed', 'linewidth': 6, 'color': '#ffcfc7'}
+            if error_smoothed_plot_kwargs:
+                kwargs.update(error_smoothed_plot_kwargs)
+            ax.plot(self.frequency, self.error_smoothed, **kwargs)
+            
         if raw and len(self.raw):
-            ax.plot(self.frequency, self.raw, **{'label': 'Raw', 'linewidth': 1.5, 'color': '#251f1b', **(raw_plot_kwargs if raw_plot_kwargs else {})})
+            kwargs = {'label': 'Raw', 'linewidth': 1.5, 'color': '#251f1b'}
+            if raw_plot_kwargs:
+                kwargs.update(raw_plot_kwargs)
+            ax.plot(self.frequency, self.raw, **kwargs)
+            
         if error and len(self.error):
-            ax.plot(self.frequency, self.error, **{'label': 'Error', 'linewidth': 1.5, 'color': '#ff5b3d', **(error_plot_kwargs if error_plot_kwargs else {})})
+            kwargs = {'label': 'Error', 'linewidth': 1.5, 'color': '#ff5b3d'}
+            if error_plot_kwargs:
+                kwargs.update(error_plot_kwargs)
+            ax.plot(self.frequency, self.error, **kwargs)
+            
         if equalization and len(self.equalization):
-            ax.plot(self.frequency, self.equalization, **{'label': 'Equalization', 'linewidth': 6, 'color': '#ded400', **(equalization_plot_kwargs if equalization_plot_kwargs else {})})
+            kwargs = {'label': 'Equalization', 'linewidth': 6, 'color': '#ded400'}
+            if equalization_plot_kwargs:
+                kwargs.update(equalization_plot_kwargs)
+            ax.plot(self.frequency, self.equalization, **kwargs)
+            
         if parametric_eq and len(self.parametric_eq):
-            ax.plot(self.frequency, self.parametric_eq, **{'label': 'Parametric Eq', 'linewidth': 1.5, 'color': '#807900', **(parametric_eq_plot_kwargs if parametric_eq_plot_kwargs else {})})
+            kwargs = {'label': 'Parametric Eq', 'linewidth': 1.5, 'color': '#807900'}
+            if parametric_eq_plot_kwargs:
+                kwargs.update(parametric_eq_plot_kwargs)
+            ax.plot(self.frequency, self.parametric_eq, **kwargs)
+            
         if fixed_band_eq and len(self.fixed_band_eq):
-            ax.plot(self.frequency, self.fixed_band_eq, **{'label': 'Fixed Band Eq', 'linewidth': 1.5, 'color': '#a8a000', 'linestyle': '--', **(fixed_band_eq_plot_kwargs if fixed_band_eq_plot_kwargs else {})})
+            kwargs = {'label': 'Fixed Band Eq', 'linewidth': 1.5, 'color': '#a8a000', 'linestyle': '--'}
+            if fixed_band_eq_plot_kwargs:
+                kwargs.update(fixed_band_eq_plot_kwargs)
+            ax.plot(self.frequency, self.fixed_band_eq, **kwargs)
+            
         if equalized and len(self.equalized_raw):
-            ax.plot(self.frequency, self.equalized_raw, **{'label': 'Equalized', 'linewidth': 1.5, 'color': '#146899', **(equalized_plot_kwargs if equalized_plot_kwargs else {})})
+            kwargs = {'label': 'Equalized', 'linewidth': 1.5, 'color': '#146899'}
+            if equalized_plot_kwargs:
+                kwargs.update(equalized_plot_kwargs)
+            ax.plot(self.frequency, self.equalized_raw, **kwargs)
+            
         ax.set_title(self.name)
         if len(ax.lines) > 0:
             ax.legend(fontsize=8)

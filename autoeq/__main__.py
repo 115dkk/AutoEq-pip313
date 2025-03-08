@@ -1,6 +1,7 @@
 import os
 import argparse
 import multiprocessing
+from multiprocessing import freeze_support
 import warnings
 
 from autoeq.constants import DEFAULT_MAX_GAIN, DEFAULT_TREBLE_F_LOWER, DEFAULT_TREBLE_F_UPPER, \
@@ -209,4 +210,5 @@ def cli_args():
 
 
 if __name__ == '__main__':
+    freeze_support()
     batch_processing(**cli_args())

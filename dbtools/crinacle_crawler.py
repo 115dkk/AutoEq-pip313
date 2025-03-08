@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from pathlib import Path, WindowsPath
+from pathlib import Path
 import re
 import numpy as np
 import json
@@ -76,7 +76,8 @@ class CrinacleCrawler(CrinacleCrawlerBase):
     def get_url_from_file_path(raw_data_file_path):
         """Creates URL from file path"""
         url = raw_data_file_path.relative_to(ROOT_PATH)
-        return 'file://' + str(url).replace('\\', '/') if type(url) == WindowsPath else str(url)
+        # WindowsPath와 PosixPath를 구분하는 대신 운영 체제에 관계없이 일관된 경로 형식 사용
+        return 'file://' + str(url).replace('\\', '/')
 
     def get_item_from_file_path(self, raw_data_file_path):
         """Creates NameItem from path to a TXT file in raw_data"""
@@ -104,10 +105,6 @@ class CrinacleCrawler(CrinacleCrawlerBase):
         return self.crawl_index
 
     @staticmethod
-    def get_file_path_from_url(url):
-        return ROOT_PATH.joinpath(re.sub(r'^file://', '', url))
-
-    @staticmethod
     def normalize_file_name(file_name):
         # File names often have L.txt or R.txt to indicate which side of the headphone has been measured
         # Some file names indicate reseat number with #N before L/R.txt
@@ -125,7 +122,7 @@ class CrinacleCrawler(CrinacleCrawlerBase):
         """Gets intermediate name with false name."""
         name = item.source_name
         if name is None:
-            file_path = self.get_file_path_from_url(item.url)
+            file_path = self.get_url_from_file_path(item.url)
             item_from_url = self.get_item_from_file_path(file_path)
             name = item_from_url.source_name
         if name is None:
@@ -162,7 +159,7 @@ class CrinacleCrawler(CrinacleCrawlerBase):
         avg_fr = FrequencyResponse(name=items[0].name)
         avg_fr.raw = np.zeros(avg_fr.frequency.shape)
         for item in items:
-            fr = FrequencyResponse.read_csv(self.get_file_path_from_url(item.url))
+            fr = FrequencyResponse.read_csv(self.get_url_from_file_path(item.url))
             fr.interpolate()
             fr.center()
             avg_fr.raw += fr.raw

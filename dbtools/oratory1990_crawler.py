@@ -62,9 +62,14 @@ class Oratory1990Crawler(Crawler):
         return image_path
 
     def read_pdf_text(self, item):
+        """PDF 파일에서 텍스트를 추출합니다"""
         self.download(item.url, self.pdf_path(item))
+        # 컨텍스트 매니저 패턴 사용
         with open(self.pdf_path(item), 'rb') as fh:
-            return PyPDF2.PdfReader(fh).pages[0].extract_text()
+            reader = PyPDF2.PdfReader(fh)
+            if len(reader.pages) > 0:
+                return reader.pages[0].extract_text()
+            return ""
 
     @staticmethod
     def extract_rig(text, item):
@@ -154,8 +159,12 @@ class Oratory1990Crawler(Crawler):
 
     @staticmethod
     def parse_image(path, px_top=800, px_bottom=4400, px_left=0, px_right=2500):
-        """Parses graph images converted from oratory1990 PDFs"""
-        im = Image.open(path)
+        """Extracts raw frequency response from PDF rendered to image. Specific to oratory1990's PDF files."""
+        # 컨텍스트 매니저를 사용하여 이미지 파일을 열고 닫습니다
+        with Image.open(path) as original_im:
+            # 이미지 복사본을 사용하여 원본 이미지가 자동으로 닫히도록 합니다
+            im = original_im.copy()
+            
         # Crop out everything but graph area (roughly)
         box = (px_left, px_top, im.size[0] - px_right, im.size[1] - px_bottom)
         im = im.crop(box)

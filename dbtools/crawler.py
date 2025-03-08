@@ -5,7 +5,8 @@ import urllib
 from pathlib import Path
 import numpy as np
 import pandas as pd
-from rapidfuzz import fuzz
+from rapidfuzz.distance import Levenshtein
+from rapidfuzz.fuzz import ratio, partial_ratio, token_sort_ratio
 import requests
 from tqdm.auto import tqdm
 import re
@@ -177,11 +178,11 @@ class Crawler(ABC):
         # Calculate ratios
         # Partial ratio to capture the model name (without mods) approximately
         partial_ratios = np.array([fuzzy(
-            fuzz.partial_ratio, re.sub(r'(?: \(.*\)$|\s)', '', model), re.sub(r'(?: \(.*\)$|\s)', '', false_model)
+            partial_ratio, re.sub(r'(?: \(.*\)$|\s)', '', model), re.sub(r'(?: \(.*\)$|\s)', '', false_model)
         ) for model in models.model.tolist()])
         partial_ratios = np.round(partial_ratios / 2) * 2
         # Ratio to fine sort all good model matches
-        ratios = [fuzzy(fuzz.ratio, model, false_model) for model in models.model.tolist()]
+        ratios = [fuzzy(ratio, model, false_model) for model in models.model.tolist()]
 
         models = models.assign(partial_ratio=partial_ratios)
         models = models.assign(ratio=ratios)

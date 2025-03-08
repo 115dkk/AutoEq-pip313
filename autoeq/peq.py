@@ -713,12 +713,15 @@ class PEQ:
                 self._init_optimizer_params(),
                 bounds=self._init_optimizer_bounds(),
                 callback=self._callback,
+                iter=1000,  # 최대 반복 횟수 명시
+                acc=1e-6,   # 수렴 정확도 명시
                 iprint=0)
         except OptimizationFinished as err:
             # Restore best params
             self._parse_optimizer_params(self.history.params[np.argmin(self.history.loss)])
 
     def plot(self, fig=None, ax=None):
+        """PEQ 필터 및 주파수 응답을 플롯합니다."""
         if fig is None:
             fig, ax = plt.subplots()
             fig.set_size_inches(12, 8)
@@ -730,13 +733,16 @@ class PEQ:
             ax.set_ylabel('Amplitude (dBr)')
             ax.grid(True, which='major')
             ax.grid(True, which='minor')
-            ax.xaxis.set_major_formatter(ticker.StrMethodFormatter('{x:.0f}'))
+            # 최신 matplotlib 버전에서는 StrMethodFormatter 사용 방식이 변경되었습니다
+            ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{x:.0f}'))
             ax.set_xticks([20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000])
         if self.target is not None:
             ax.plot(self.f, self.target, color='black', linestyle='--', linewidth=1, label='Target')
         for i, filt in enumerate(self.filters):
-            ax.fill_between(filt.f, np.zeros(filt.fr.shape), filt.fr, alpha=0.3, color=f'C{i}')
-            ax.plot(filt.f, filt.fr, color=f'C{i}', linewidth=1)
+            # 색상 지정 방식을 최신 matplotlib 버전에 맞게 수정합니다
+            color = plt.cm.tab10(i % 10)
+            ax.fill_between(filt.f, np.zeros(filt.fr.shape), filt.fr, alpha=0.3, color=color)
+            ax.plot(filt.f, filt.fr, color=color, linewidth=1)
         ax.plot(self.f, self.fr, color='black', linewidth=1, label='FR')
         ax.legend()
         return fig, ax

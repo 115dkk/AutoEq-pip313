@@ -1,10 +1,11 @@
-requests~=2.31.0
-pandas~=2.1.1
-PyPDF2~=3.0.1
-ghostscript~=0.7
-beautifulsoup4~=4.12.2
-selenium~=4.14.0
-rapidfuzz~=3.4.0
-ipywidgets~=8.1.1
-jupyterlab~=4.0.7
-selenium-wire~5.10.0
+# 파이썬 3.13.2와 호환되는 최소 버전
+requests>=2.31.0  # HTTP 요청 라이브러리
+pandas>=2.1.1     # 데이터 분석 라이브러리
+PyPDF2>=3.0.1     # PDF 파싱 라이브러리
+ghostscript>=0.7  # PDF 렌더링
+beautifulsoup4>=4.12.2  # HTML 파싱
+selenium>=4.14.0  # 웹 브라우저 자동화
+rapidfuzz>=3.4.0  # 문자열 유사도 계산
+ipywidgets>=8.1.1  # 주피터 위젯
+jupyterlab>=4.0.7  # 주피터 랩
+selenium-wire>=5.10.0  # 셀레늄 확장 라이브러리

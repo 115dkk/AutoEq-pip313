@@ -2,7 +2,7 @@
 
 from pathlib import Path
 import re
-from rapidfuzz import fuzz
+from rapidfuzz.fuzz import ratio, partial_ratio, token_sort_ratio
 
 
 class ManufacturerIndex:
@@ -74,13 +74,18 @@ class ManufacturerIndex:
         return re.sub(f'^{match}', '', name, flags=re.IGNORECASE).strip()
 
     def search(self, name, threshold=80):
-        matches = []
-        for false_name, true_name in self._true_name.items():
-            # Search with false name
-            ratio = fuzz.ratio(false_name.lower(), name.lower())
-            if ratio > threshold:
-                matches.append((true_name, ratio))
-        return sorted(matches, key=lambda x: x[1], reverse=True)
+        """Search for manufacturer by name"""
+        if not name:
+            return []
+        results = []
+        for true_name in self._false_names.keys():
+            # fuzz.ratio 대신 ratio 함수 직접 사용
+            r = ratio(name.lower(), true_name.lower())
+            if r >= threshold:
+                results.append((true_name, r))
+        # Sort by descending ratio
+        results.sort(key=lambda x: x[1], reverse=True)
+        return results
 
 
 class UnknownManufacturerError(Exception):

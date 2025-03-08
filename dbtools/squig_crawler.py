@@ -40,9 +40,22 @@ _squig_rigs = {
 
 class SquigCrawlerManager:
     def __init__(self):
-        sites = requests.get('https://squig.link/squigsites.json', headers={
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/119.0'
-        }).json()
+        # 더 안전한 요청 헤더와 타임아웃 설정
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/json',
+            'Accept-Language': 'en-US,en;q=0.9',
+        }
+        response = requests.get(
+            'https://squig.link/squigsites.json',
+            headers=headers,
+            timeout=30
+        )
+        
+        # HTTP 상태 코드 확인
+        response.raise_for_status()
+        
+        sites = response.json()
         self._crawlers = [
             SquigCrawler(
                 username=site['username'],

@@ -3,6 +3,7 @@
 import os
 from glob import glob
 import multiprocessing
+from multiprocessing import Pool
 import soundfile as sf
 import numpy as np
 from tqdm.auto import tqdm
@@ -119,7 +120,7 @@ def batch_processing(input_file=None, input_dir=None, output_dir=None, new_only=
     if not thread_count:
         thread_count = multiprocessing.cpu_count()
 
-    with multiprocessing.Pool(thread_count) as pool:
+    with Pool(thread_count) as pool:
         results = []
         for result in tqdm(
                 pool.imap_unordered(process_file_wrapper, args_list, chunksize=1), total=len(args_list)):

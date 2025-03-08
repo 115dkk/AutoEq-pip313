@@ -33,9 +33,18 @@ class HypetheSonicsCrawler(CrinacleCrawlerBase):
     def crawl(self):
         self.name_index = self.read_name_index()
         self.crawl_index = NameIndex()
+        
+        # 안정적인 다운로드를 위해 헤더와 타임아웃 설정 추가
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/json',
+        }
+        
         raw = self.download(
             'https://www.hypethesonics.com/dbc/SPLdata/phone_book.json',
-            self.measurements_path.joinpath('phone_book_iemdbc.json'))
+            self.measurements_path.joinpath('phone_book_iemdbc.json'),
+            headers=headers,
+            timeout=30)
         iemdbc_map = self.parse_book(json.loads(raw.decode('utf-8')))
         for file_name, source_name in iemdbc_map.items():
             self.crawl_index.add(NameItem(
@@ -46,7 +55,9 @@ class HypetheSonicsCrawler(CrinacleCrawlerBase):
                 url=f'https://www.hypethesonics.com/dbc/SPLdata/{file_name} R.txt'))
         raw = self.download(
             'https://www.hypethesonics.com/hatsdbc/SPLdata/phone_book.json',
-            self.measurements_path.joinpath('phone_book_iemhatsdbc.json'))
+            self.measurements_path.joinpath('phone_book_iemhatsdbc.json'),
+            headers=headers,
+            timeout=30)
         iemhatsdbc_map = self.parse_book(json.loads(raw.decode('utf-8')))
         for file_name, source_name in iemhatsdbc_map.items():
             self.crawl_index.add(NameItem(
