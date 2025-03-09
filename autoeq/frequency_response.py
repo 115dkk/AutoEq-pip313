@@ -454,13 +454,26 @@ class FrequencyResponse:
             min_mean_error=False):
         """Sets target and error curves."""
         target = target.copy()
-        target.interpolate()
+        # 타겟 주파수를 자신의 주파수와 동일하게 보간
+        target.interpolate(f=self.frequency)
         target.center()
-
-        self.target = target.raw + self.create_target(
+        
+        # 타겟 커브 생성 (주파수는 이제 동일해야 함)
+        target_curve = self.create_target(
             bass_boost_gain=bass_boost_gain, bass_boost_fc=bass_boost_fc, bass_boost_q=bass_boost_q,
             treble_boost_gain=treble_boost_gain, treble_boost_fc=treble_boost_fc, treble_boost_q=treble_boost_q,
             tilt=tilt, fs=fs)
+            
+        # 크기 확인 및 맞추기
+        if len(target.raw) != len(target_curve):
+            # 배열 크기가 다르면 target_curve를 타겟 원본 크기로 보간
+            target_curve = np.interp(
+                np.log10(target.frequency),
+                np.log10(self.frequency[:len(target_curve)]),
+                target_curve
+            )
+        
+        self.target = target.raw + target_curve
 
         if sound_signature is not None:
             # Sound signature given, add it to target curve
@@ -609,7 +622,7 @@ class FrequencyResponse:
                 x, y, max_slope, max_slope_decay=max_slope_decay, start_index=rtl_start, peak_inds=peak_inds,
                 limit_free_mask=limit_free_mask, concha_interference=concha_interference)
 
-            # ltr and rtl limited curves are combined with min function
+            # Build combined curve
             combined = self.__class__(
                 name='limiter', frequency=x, raw=np.min(np.vstack([limited_ltr, limited_rtl]), axis=0))
 
