@@ -8,10 +8,10 @@ build-backend = "hatchling.build"
 name = "autoeq-py313"
 version = "1.0.0"
 authors = [
-  { name="원본 저자: Jaakko Pasanen", email="jaakko.o.pasanen@gmail.com" },
-  { name="Python 3.13.2 호환 버전: Anonymous", email="" },
+  { name="Original author: Jaakko Pasanen", email="jaakko.o.pasanen@gmail.com" },
+  { name="Python 3.13.2 comfortable: 115dkk", email="qjrzbasd@naver.com" },
 ]
-description = "Automatic headphone equalizer config generator - Python 3.13.2 호환 버전"
+description = "Automatic headphone equalizer config generator - Python 3.13.2 comfortable"
 readme = "README.md"
 requires-python = ">=3.8,<=3.13.2"
 classifiers = [
@@ -30,13 +30,17 @@ dependencies = [
     'tqdm>=4.66.1',
 ]
 
+[project.scripts]
+autoeq = "autoeq_cli:entry_point"
+
 [project.urls]
 "Homepage" = "https://github.com/jaakkopasanen/AutoEq"
-"Python 3.13.2 호환 버전" = "설정 예정"
+"Python 3.13.2 comfortable" = "https://github.com/115dkk/AutoEq-pip313"
 
 [tool.hatch.build]
 include = [
     "/autoeq",
+    "*.py",
     "LICENCE",
     "pyproject.toml",
 ]
