@@ -454,25 +454,46 @@ class FrequencyResponse:
             min_mean_error=False):
         """Sets target and error curves."""
         target = target.copy()
+        print(len(target.raw), len(self.frequency))
         # 타겟 주파수를 자신의 주파수와 동일하게 보간
         target.interpolate(f=self.frequency)
         target.center()
         
-        # 타겟 커브 생성 (주파수는 이제 동일해야 함)
+        # 타겟 커브 생성
         target_curve = self.create_target(
             bass_boost_gain=bass_boost_gain, bass_boost_fc=bass_boost_fc, bass_boost_q=bass_boost_q,
             treble_boost_gain=treble_boost_gain, treble_boost_fc=treble_boost_fc, treble_boost_q=treble_boost_q,
             tilt=tilt, fs=fs)
+
+        # 크기 확인 및 맞추기 - 이 부분을 개선
+        if len(target.raw) != len(self.frequency):  # 보간이 실패했는지 확인
+            # SciPy의 보간 함수로 강제로 크기 맞추기
+            from scipy.interpolate import interp1d
             
-        # 크기 확인 및 맞추기
-        if len(target.raw) != len(target_curve):
-            # 배열 크기가 다르면 target_curve를 타겟 원본 크기로 보간
-            target_curve = np.interp(
-                np.log10(target.frequency),
-                np.log10(self.frequency[:len(target_curve)]),
-                target_curve
+            # target.raw를 self.frequency와 같은 크기로 강제 보간
+            # 로그 스케일을 사용하여 주파수 특성 보존
+            f_interp = interp1d(
+                np.log10(target.frequency), 
+                target.raw,
+                bounds_error=False,
+                fill_value="extrapolate"
             )
+            target.raw = f_interp(np.log10(self.frequency))
         
+        # target_curve 크기 확인 및 맞추기
+        if len(target_curve) != len(self.frequency):
+            # create_target이 다른 크기를 반환한 경우 (이상적으로는 발생하지 않아야 함)
+            from scipy.interpolate import interp1d
+            
+            f_interp = interp1d(
+                np.log10(self.frequency[:len(target_curve)]),
+                target_curve,
+                bounds_error=False,
+                fill_value="extrapolate"
+            )
+            target_curve = f_interp(np.log10(self.frequency))
+        
+        # 이제 두 배열의 크기가 같아야 합니다
         self.target = target.raw + target_curve
 
         if sound_signature is not None:
