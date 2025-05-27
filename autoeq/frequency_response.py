@@ -54,6 +54,8 @@ elif system == 'Linux':
 warnings.filterwarnings("ignore", message="Values in x were outside bounds during a minimize step, clipping to bounds")
 warnings.filterwarnings("ignore", category=UserWarning, module="matplotlib")
 
+plt.rcParams['axes.unicode_minus'] = False # 마이너스 부호 문제 해결
+
 
 class FrequencyResponse:
     _cols = [
