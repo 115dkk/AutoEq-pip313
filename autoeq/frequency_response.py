@@ -257,13 +257,18 @@ class FrequencyResponse:
         # Interpolate to even sample interval
         fr = self.__class__(name='fr_data', frequency=self.frequency.copy(), raw=self.equalization.copy())
         f_min = np.max([fr.frequency[0], f_res])  # Save gain at lowest available frequency
-        interpolator = InterpolatedUnivariateSpline(np.log10(fr.frequency), fr.raw, k=1)
+        # 데이터 포인트 수에 따라 보간 차수 결정
+        k_order_min_phase = 3 if len(fr.frequency) >= 4 else 1
+        try:
+            interpolator = InterpolatedUnivariateSpline(np.log10(fr.frequency), fr.raw, k=k_order_min_phase)
+        except ValueError: # 예외 발생 시 선형으로 폴백
+            interpolator = InterpolatedUnivariateSpline(np.log10(fr.frequency), fr.raw, k=1)
         gain_f_min = interpolator(np.log10(f_min))
         # Filter length, optimized for FFT speed
         n = round(fs // 2 / f_res)
         n = next_fast_len(n)
         f = np.linspace(0.0, fs // 2, n)
-        fr.interpolate(f, pol_order=1)
+        fr.interpolate(f) # pol_order 인자 제거, 내부적으로 큐빅/선형 선택
         # Set gain for all frequencies below original minimum frequency to match gain at the original minimum frequency
         fr.raw[fr.frequency <= f_min] = gain_f_min
         if normalize:
@@ -284,9 +289,14 @@ class FrequencyResponse:
         # Interpolate to even sample interval
         fr = self.__class__(name='fr_data', frequency=self.frequency, raw=self.equalization)
         f_min = np.max([fr.frequency[0], f_res])  # Save gain at lowest available frequency
-        interpolator = InterpolatedUnivariateSpline(np.log10(fr.frequency), fr.raw, k=1)
+        # 데이터 포인트 수에 따라 보간 차수 결정
+        k_order_linear_phase = 3 if len(fr.frequency) >= 4 else 1
+        try:
+            interpolator = InterpolatedUnivariateSpline(np.log10(fr.frequency), fr.raw, k=k_order_linear_phase)
+        except ValueError: # 예외 발생 시 선형으로 폴백
+            interpolator = InterpolatedUnivariateSpline(np.log10(fr.frequency), fr.raw, k=1)
         gain_f_min = interpolator(np.log10(f_min))
-        fr.interpolate(np.arange(0.0, fs // 2, f_res), pol_order=1)
+        fr.interpolate(np.arange(0.0, fs // 2, f_res)) # pol_order 인자 제거, 내부적으로 큐빅/선형 선택
         # Set gain for all frequencies below original minimum frequency to match gain at the original minimum frequency
         fr.raw[fr.frequency <= f_min] = gain_f_min
         if normalize:
@@ -365,8 +375,10 @@ class FrequencyResponse:
         """Moved to autoeq.utils but retaining method to avoid breaking changes."""
         return generate_frequencies(f_min, f_max, f_step)
 
-    def interpolate(self, f=None, f_step=DEFAULT_STEP, pol_order=1, f_min=DEFAULT_F_MIN, f_max=DEFAULT_F_MAX):
-        """Interpolates missing values from previous and next value. Resets all but raw data."""
+    def interpolate(self, f=None, f_step=DEFAULT_STEP, f_min=DEFAULT_F_MIN, f_max=DEFAULT_F_MAX):
+        """Interpolates missing values from previous and next value. Resets all but raw data.
+        Uses cubic spline interpolation if 4 or more data points are available, otherwise linear.
+        """
         # Remove None values
         i = 0
         while i < len(self.raw):
@@ -380,7 +392,13 @@ class FrequencyResponse:
         log_f = np.log10(self.frequency)
         for key in keys:
             if len(self.__dict__[key]):
-                interpolators[key] = InterpolatedUnivariateSpline(log_f, self.__dict__[key], k=pol_order)
+                # 데이터 포인트 수에 따라 보간 차수 결정
+                k_order = 3 if len(self.frequency) >= 4 else 1
+                try:
+                    interpolators[key] = InterpolatedUnivariateSpline(log_f, self.__dict__[key], k=k_order)
+                except ValueError: # 예외 발생 시 (예: 모든 점이 동일한 x값) 선형으로 폴백
+                    interpolators[key] = InterpolatedUnivariateSpline(log_f, self.__dict__[key], k=1)
+
         if f is None:
             self.frequency = self.generate_frequencies(f_min=f_min, f_max=f_max, f_step=f_step)
         else:
@@ -412,7 +430,13 @@ class FrequencyResponse:
         """
         equal_energy_fr = self.__class__(name='equal_energy', frequency=self.frequency.copy(), raw=self.raw.copy())
         equal_energy_fr.interpolate()
-        interpolator = InterpolatedUnivariateSpline(np.log10(equal_energy_fr.frequency), equal_energy_fr.raw, k=1)
+        # 데이터 포인트 수에 따라 보간 차수 결정
+        k_order_center = 3 if len(equal_energy_fr.frequency) >= 4 else 1
+        try:
+            interpolator = InterpolatedUnivariateSpline(np.log10(equal_energy_fr.frequency), equal_energy_fr.raw, k=k_order_center)
+        except ValueError: # 예외 발생 시 선형으로 폴백
+            interpolator = InterpolatedUnivariateSpline(np.log10(equal_energy_fr.frequency), equal_energy_fr.raw, k=1)
+
         if type(frequency) in [list, np.ndarray] and len(frequency) > 1:
             # Use the average of the gain values between the given frequencies as the difference to be subtracted
             diff = np.mean(equal_energy_fr.raw[np.logical_and(
