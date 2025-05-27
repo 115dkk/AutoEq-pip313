@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "autoeq-py313"
-version = "1.2.0"
+version = "1.2.1"
 authors = [
   { name="Original author: Jaakko Pasanen", email="jaakko.o.pasanen@gmail.com" },
   { name="Python 3.13.2 comfortable: 115dkk", email="qjrzbasd@naver.com" },
