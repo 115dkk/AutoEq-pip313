@@ -6,14 +6,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "autoeq-py313"
-version = "1.2.1"
+version = "1.2.2"
 authors = [
   { name="Original author: Jaakko Pasanen", email="jaakko.o.pasanen@gmail.com" },
   { name="Python 3.13.2 comfortable: 115dkk", email="qjrzbasd@naver.com" },
 ]
 description = "Automatic headphone equalizer config generator - Python 3.13.2 comfortable"
 readme = "README.md"
-requires-python = ">=3.8,<=3.13.2"
+requires-python = ">=3.8,<3.14"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
