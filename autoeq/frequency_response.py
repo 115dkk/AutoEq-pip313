@@ -58,6 +58,11 @@ from autoeq.csv import create_csv, parse_csv
 from autoeq.peq import PEQ, HighShelf, LowShelf, Peaking
 from autoeq.utils import generate_frequencies, log_f_sigmoid, log_log_gradient, log_tilt, smoothing_window_size
 
+try:
+    ADAPTIVE_PALETTE = Image.Palette.ADAPTIVE
+except AttributeError:
+    ADAPTIVE_PALETTE = Image.ADAPTIVE
+
 # 운영체제별 기본 폰트 설정
 system = platform.system()
 if system == 'Windows':
@@ -1059,7 +1064,7 @@ class FrequencyResponse:
             file_path = os.path.abspath(file_path)
             fig.savefig(file_path, dpi=120)
             im = Image.open(file_path)
-            im = im.convert('P', palette=Image.ADAPTIVE, colors=60)
+            im = im.convert('P', palette=ADAPTIVE_PALETTE, colors=60)
             im.save(file_path, optimize=True)
         if show_fig:
             plt.show()
